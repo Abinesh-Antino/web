@@ -130,8 +130,9 @@ function populateTable(data = []) {
         // Copy Button
         const copyButton = document.createElement("button");
         copyButton.classList.add("btn", "btn-sm", "btn-outline-info");
-        copyButton.innerHTML = '<i class="bi bi-copy"></i>'; // Bootstrap clipboard icon
+        copyButton.innerHTML = '<i class="bi bi-copy"></i>';
         copyButton.addEventListener("click", () => copyToClipboard(shortLink.href));
+        setTooltip(copyButton, "Copy to clipboard");
 
         shortLinkContainer.appendChild(shortLink);
         shortLinkContainer.appendChild(copyButton);
@@ -154,7 +155,8 @@ function populateTable(data = []) {
 
         // Created Date Column
         const dateTd = document.createElement("td");
-        dateTd.textContent = link.$createdAt;
+        const date = new Date(link.$createdAt);
+        dateTd.textContent = date.toLocaleDateString();
         row.appendChild(dateTd);
 
         // Delete Button Column
@@ -165,11 +167,21 @@ function populateTable(data = []) {
         deleteButton.addEventListener("click", () => deleteLink(link.$id));
         deleteTd.appendChild(deleteButton);
         row.appendChild(deleteTd);
+        setTooltip(deleteButton, "Delete link");
 
         // Append Row to Table Body
         tbody.appendChild(row);
     });
 }
+
+
+function setTooltip(element, message) {
+    if (!element) return;
+    element.setAttribute("data-bs-toggle", "tooltip");
+    element.setAttribute("data-bs-title", message);
+    new bootstrap.Tooltip(element);
+}
+
 
 // Function to Copy to Clipboard
 function copyToClipboard(text) {
