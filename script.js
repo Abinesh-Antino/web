@@ -10,22 +10,48 @@ document.addEventListener("DOMContentLoaded", () => {
     getData();
 });
 
-const linksData = [];
+function showLoader() {
+    let loader = document.getElementById("loader-overlay");
+    if (!loader) {
+        loader = document.createElement("div");
+        loader.id = "loader-overlay";
+        loader.innerHTML = `
+            <div class="loader-container">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loader);
+    }
+    loader.style.display = "flex";
+}
+
+// Hide loader
+function hideLoader() {
+    const loader = document.getElementById("loader-overlay");
+    if (loader) loader.style.display = "none";
+}
 
 
-function getData() {
-    fetch(BASEURL).then(response => response.json()).then(data => {
-        const urls = data.urls;
-        const documents = urls['documents'] ?? [];
-        populateTable(documents.reverse());
-        showToast('Data fetched !');
-    }).catch(error => {
-        console.error(error);
-        showToast('Something went wrong');
-    });
+function getData(message) {
+    showLoader();
+    fetch(BASEURL)
+        .then(response => response.json()).then(data => {
+            const urls = data.urls;
+            const documents = urls['documents'] ?? [];
+            populateTable(documents.reverse());
+            showToast(message ?? 'Data fetched !');
+        })
+        .catch(error => {
+            console.error(error);
+            showToast('Something went wrong');
+        })
+        .finally(() => hideLoader());
 }
 
 function createLink(url) {
+    showLoader();
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
     const request = new Request(BASEURL, {
@@ -36,19 +62,25 @@ function createLink(url) {
     });
     fetch(request)
         .then(response => response.json())
-        .then(data => getData())
+        .then(data => getData(data.message))
         .catch(error => {
             console.error(error);
             showToast('Something went wrong');
-        });
+        })
+        .finally(() => hideLoader());
 }
 
 
 function deleteLink(id) {
-    fetch(BASEURL + '/' + id, { method: 'DELETE' }).then(response => response.json()).then(data => getData()).catch(error => {
-        console.error(error);
-        showToast('Something went wrong');
-    });
+    showLoader();
+    fetch(BASEURL + '/' + id, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => getData(data.message))
+        .catch(error => {
+            console.error(error);
+            showToast('Something went wrong');
+        })
+        .finally(() => hideLoader());
 }
 
 /**
@@ -210,6 +242,7 @@ function setupShortenButton() {
 
         // Clear input field
         linkInput.value = "";
+        event.preventDefault();
     });
 }
 
